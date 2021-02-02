@@ -10,13 +10,13 @@
 
 
 from datetime import datetime
-from time import sleep
 
 import feedparser
 import requests
 from bs4 import BeautifulSoup
 
 from db_engine import get_all_rows
+
 
 RSS_URL = 'https://www.yanao.ru/presscenter/news/rss/'
 
@@ -26,8 +26,9 @@ def get_rss_feed_data(rss_url: str) -> list:
     print('get RSS feed data')
     start = datetime.now()
     rss_feed = feedparser.parse(rss_url)
+    entries = reversed(rss_feed.entries)
     res = []
-    for entrie in rss_feed.entries:
+    for entrie in entries:
         title = entrie.title
         url = entrie.link
         try:
