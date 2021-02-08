@@ -10,21 +10,37 @@
 ########################################################################
 
 from time import sleep
+from datetime import datetime
+
+from requests.exceptions import ConnectionError
+from urllib.error import URLError
 
 from bot_engine import post_in_channel
 from db_engine import insert_data_in_db
-from rss_parser import find_new_posts
+from rss_parser import find_new_posts, ParsingTimeoutError
 
 
 def update_tg_channel():
     """Парсит RSS ленту, сверяет данные с базой и обновляет телеграм канал"""
-    print('updating telegram channel')
-    new_posts = find_new_posts()
-    for post in new_posts:
-        print(post)
-        post_in_channel(post)
-        insert_data_in_db(post)
-        sleep(2)
+    print(f'{datetime.now()} updating telegram channel')
+    try:
+        new_posts = find_new_posts()
+        for post in new_posts:
+            print(post)
+            post_in_channel(post)
+            insert_data_in_db(post)
+            sleep(2)
+    except ConnectionError:
+        print(f'{datetime.now()} News Connection error')
+    except URLError:
+        print(f'{datetime.now()} RSS connection error')
+    except AttributeError:
+        print(f'{datetime.now()} IMG not loaded')
+        raise AttributeError
+    except TimeoutError:
+        print(f'{datetime.now()} Parsing timeout')
+    except ParsingTimeoutError:
+        print(f'{datetime.now()} Custom Parsing Timeout Error')
 
 
 def update_channel_loop():
