@@ -9,7 +9,10 @@
 ########################################################################
 
 
+import functools
 from datetime import datetime
+from time import sleep
+from threading import Thread
 
 import feedparser
 import requests
@@ -21,9 +24,42 @@ from db_engine import get_all_rows
 RSS_URL = 'https://www.yanao.ru/presscenter/news/rss/'
 
 
+class ParsingTimeoutError(Exception):
+    """Класс для Exception который вылетает при таймауте"""
+    pass
+
+
+def timeout(seconds: int):
+    """Декоратор для обработки таймаутов. Принимает количество секунд для таймаута"""
+    def deco(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            res = [ParsingTimeoutError('function [%s] timeout [%s seconds] exceeded!' % (func.__name__, seconds))]
+
+            def new_func():
+                try:
+                    res[0] = func(*args, **kwargs)
+                except ParsingTimeoutError as e:
+                    res[0] = e
+            t = Thread(target=new_func)
+            t.daemon = True
+            try:
+                t.start()
+                t.join(seconds)
+            except Exception as je:
+                print('error starting thread')
+                raise je
+            ret = res[0]
+            if isinstance(ret, BaseException):
+                raise ret
+            return ret
+        return wrapper
+    return deco
+
+
 def get_rss_feed_data(rss_url: str) -> list:
     """Получает RSS ленту, парсит её и возвращает данные постов"""
-    print('get RSS feed data')
+    print(f'{datetime.now()} get RSS feed data')
     start = datetime.now()
     rss_feed = feedparser.parse(rss_url)
     entries = reversed(rss_feed.entries)
@@ -37,16 +73,14 @@ def get_rss_feed_data(rss_url: str) -> list:
             html = requests.get(url=url).text
             soup = BeautifulSoup(html, 'lxml')
             img = 'https://yanao.ru' + soup.find('div', class_='region__centered-block m-b-32').find('img').get('src')
-        data = {
-            'title': title,
-            'url': url,
-            'img': img
-        }
+            sleep(1)
+        data = {'title': title, 'url': url, 'img': img}
         res.append(data)
     print(f'RSS feed parsed in {(datetime.now() - start).seconds} seconds')
     return res
 
 
+@timeout(seconds=120)
 def find_new_posts() -> list:
     """Парсит RSS, сравнивает данные с базой и возвращает список неопубликованных постов"""
     rss_data = get_rss_feed_data(RSS_URL)
