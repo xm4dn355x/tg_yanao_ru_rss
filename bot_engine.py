@@ -29,7 +29,11 @@ def log_error(f):
             print(error)
             update = args[0]
             if update and hasattr(update, 'message'):
-                update.message.bot.send_message(chat_id=ADMIN_ID, text=error)
+                try:
+                    update.message.bot.send_message(chat_id=ADMIN_ID, text=error)
+                except Exception as e:
+                    error = f'ERROR {e} in '
+                    print(f'sending to admin error: {error}')
             raise e
     return inner
 
