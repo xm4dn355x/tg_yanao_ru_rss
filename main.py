@@ -27,8 +27,9 @@ def update_tg_channel():
         new_posts = find_new_posts()
         for post in new_posts:
             print(post)
-            post_in_channel(post)
-            insert_data_in_db(post)
+            send_status = post_in_channel(post)
+            if send_status:
+                insert_data_in_db(post)
             sleep(2)
     except ConnectionError:
         print(f'{datetime.now()} News Connection error')
