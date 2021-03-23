@@ -1,7 +1,7 @@
 # tg_yanao_ru_rss
 Телеграм-Бот Публикующий новости официального сайта yanao.ru
 ## Dependencies
-- Python 3.8+
+- Python 3.8
 - PostgreSQL 10+
 - Docker
 
