@@ -64,18 +64,17 @@ def get_rss_feed_data(rss_url: str) -> list:
     rss_feed = feedparser.parse(rss_url)
     entries = reversed(rss_feed.entries)
     res = []
-    for entrie in entries:
-        title = entrie.title
-        url = entrie.link
+    for entry in entries:
+        title = entry.title
+        url = entry.link
         try:
-            img = 'https://yanao.ru' + entrie.turbo_content.split('img src="')[1].split('"')[0]
+            img = 'https://yanao.ru' + entry.turbo_content.split('img src="')[1].split('"')[0]
         except IndexError:
             html = requests.get(url=url).text
             soup = BeautifulSoup(html, 'lxml')
             img = 'https://yanao.ru' + soup.find('div', class_='region__centered-block m-b-32').find('img').get('src')
             sleep(1)
-        data = {'title': title, 'url': url, 'img': img}
-        res.append(data)
+        res.append({'title': title, 'url': url, 'img': img})
     print(f'RSS feed parsed in {(datetime.now() - start).seconds} seconds')
     return res
 
