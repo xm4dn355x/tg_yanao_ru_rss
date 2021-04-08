@@ -70,7 +70,9 @@ def get_rss_feed_data(rss_url: str) -> list:
         try:
             img = 'https://yanao.ru' + entry.turbo_content.split('img src="')[1].split('"')[0]
         except IndexError:
-            html = requests.get(url=url).text
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 '
+                                     '(KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+            html = requests.get(url=url, headers=headers).text
             soup = BeautifulSoup(html, 'lxml')
             img = 'https://yanao.ru' + soup.find('div', class_='region__centered-block m-b-32').find('img').get('src')
             sleep(1)
